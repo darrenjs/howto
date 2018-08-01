@@ -1,2 +1,2 @@
-# recipies
-Build recipies and other howtos
+# recipes
+Build recipes and other howtos
