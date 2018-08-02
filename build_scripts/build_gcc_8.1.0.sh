@@ -5,9 +5,11 @@
 # This gcc build script is free software; you can redistribute it and/or modify
 # it under the terms of the MIT license.
 
+
 #======================================================================
 # User configuration
 #======================================================================
+
 
 # Version of gcc being built
 gcc_version=8.1.0
@@ -15,12 +17,12 @@ gcc_version=8.1.0
 # Additional makefile options.  E.g., "-j 4" for parallel builds.  Parallel
 # builds are faster, however it can cause a build to fail if the project
 # makefile does not support parallel build.
-make_flags="-j 1"
+#make_flags=""
 
 # Architecture we are building for.
 arch_flags="-march=x86-64"
 
-# This is required during configuration of GCC.
+# Target linux/gnu
 build_target=x86_64-unknown-linux-gnu
 
 # File locations.  Use 'install_dir' to specify where gcc will be installed.
@@ -30,9 +32,9 @@ build_target=x86_64-unknown-linux-gnu
 # WARNING: do not make 'source_dir' and 'build_dir' the same, or
 # subdirectory of each other! It will cause build problems.
 install_dir=${HOME}/opt/gcc-${gcc_version}
-build_dir=/var/tmp/$(whoami)/gcc_build
-source_dir=/var/tmp/$(whoami)/gcc_source
-tarfile_dir=/var/tmp/$(whoami)/gcc_taballs
+build_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_build
+source_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_source
+tarfile_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_taballs
 
 # String which gets embedded into GCC verion info, can be accessed at
 # runtime. Use to indicate who/what/when has built this compiler.
@@ -122,7 +124,6 @@ function __wget()
 # Set script to abort on any command that results an error status
 trap '__abort' 0
 set -e
-
 
 
 #======================================================================
@@ -233,37 +234,36 @@ env
 
 __banner Configuring source code
 
-
-cd ${build_dir}/gcc-${gcc_version}
+cd "${build_dir}"
 
 CC=gcc
 CXX=g++
 OPT_FLAGS="-O2 $gflags -Wall  $arch_flags"
 CC="$CC" CXX="$CXX" CFLAGS="$OPT_FLAGS" \
-	CXXFLAGS="`echo " $OPT_FLAGS " | sed 's/ -Wall / /g'`" \
-	$source_dir/gcc-${gcc_version}/configure --prefix=${install_dir} \
-	--enable-bootstrap \
-	--enable-shared \
+    CXXFLAGS="`echo " $OPT_FLAGS " | sed 's/ -Wall / /g'`" \
+    $source_dir/gcc-${gcc_version}/configure --prefix=${install_dir} \
+    --enable-bootstrap \
+    --enable-shared \
     --enable-threads=posix \
     --enable-checking=release \
     --with-system-zlib \
     --enable-__cxa_atexit \
     --disable-libunwind-exceptions \
-	--enable-linker-build-id \
-	--enable-languages=c,c++,lto \
+    --enable-linker-build-id \
+    --enable-languages=c,c++,lto \
     --disable-vtable-verify \
-	--with-default-libstdcxx-abi=new \
+    --with-default-libstdcxx-abi=new \
     --enable-libstdcxx-debug  \
     --without-included-gettext  \
-	--enable-plugin \
-	--disable-initfini-array \
-	--disable-libgcj \
+    --enable-plugin \
+    --disable-initfini-array \
+    --disable-libgcj \
     --enable-plugin  \
     --disable-multilib \
-	--with-tune=generic \
-	--build=${build_target} \
-	--target=${build_target} \
-	--host=${build_target} \
+    --with-tune=generic \
+    --build=${build_target} \
+    --target=${build_target} \
+    --host=${build_target} \
     --with-pkgversion="$packageversion"
 
 
@@ -272,7 +272,8 @@ CC="$CC" CXX="$CXX" CFLAGS="$OPT_FLAGS" \
 #======================================================================
 
 
-cd "$build_dir/gcc-${gcc_version}" && make BOOT_CFLAGS="$OPT_FLAGS" $make_flags bootstrap
+cd "$build_dir"
+make BOOT_CFLAGS="$OPT_FLAGS" $make_flags bootstrap
 
 # If desired, run the gcc test phase by uncommenting following line
 
@@ -294,7 +295,8 @@ make install
 #======================================================================
 
 
+__banner Complete
+
 trap : 0
-echo build script complete at `date`
 
 #end
