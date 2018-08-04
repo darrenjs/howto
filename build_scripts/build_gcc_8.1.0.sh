@@ -215,7 +215,7 @@ H=$HOME
 
 for i in $(env | awk -F"=" '{print $1}') ;
 do
-    unset $i ;
+    unset $i || true   # ignore unset fails
 done
 
 # restore
