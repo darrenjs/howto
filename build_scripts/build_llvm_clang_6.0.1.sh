@@ -17,7 +17,7 @@ llvm_version=6.0.1
 # Additional makefile options.  E.g., "-j 4" for parallel builds.  Parallel
 # builds are faster, however it can cause a build to fail if the project
 # makefile does not support parallel build.
-#make_flags=""
+make_flags="-j 2"
 
 # File locations.  Use 'install_dir' to specify where final binarieswill be
 # installed.  The other directories are used only during the build process, and
@@ -30,6 +30,8 @@ build_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_build
 source_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_sources
 tarfile_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_tarballs
 
+# Note: llvm needs cmake, and version > 3.0
+CMAKE=$(which cmake)
 
 #======================================================================
 # Support functions
@@ -210,9 +212,6 @@ env
 
 __banner Configuring source code
 
-# Note: this needs cmake installs, and needs to be version > 3.4
-which cmake
-
 # Explanation of some configuration switches:
 #
 # LLVM_TARGETS_TO_BUILD=X86,DLLVM_BUILD_32_BITS:BOOL=OFF -- build 64bit x86_64
@@ -222,8 +221,8 @@ which cmake
 # we are using libc++abi, so configure it to use libunwind; this will then get
 # implicitly linked into binaries that link to libc++abi.
 
-cd  ${build_dir}
-cmake \
+cd ${build_dir}
+"$CMAKE" \
     -G "Unix Makefiles" \
     -DLLVM_TARGETS_TO_BUILD=X86 \
     -DLLVM_BUILD_32_BITS:BOOL=OFF \
