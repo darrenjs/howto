@@ -1,6 +1,6 @@
 #/usr/bin/env bash
 
-# Instructions for building gcc 8.1.0 from source.
+# Instructions for building gcc 8.x from source.
 
 # This gcc build script is free software; you can redistribute it and/or modify
 # it under the terms of the MIT license.
@@ -11,7 +11,7 @@
 #======================================================================
 
 
-# Version of gcc being built
+# Version of gcc being built (e.g. 8.1.0, or 8.2.0)
 gcc_version=8.1.0
 
 # Additional makefile options.  E.g., "-j 4" for parallel builds.  Parallel
@@ -294,6 +294,16 @@ make install
 # Post build
 #======================================================================
 
+
+# Create a shell script that users can source to bring GCC into shell
+# environment
+cat << EOF > ${install_dir}/env.sh
+# source this script to bring gcc ${gcc_version} into your environment
+export PATH=${install_dir}/bin:\$PATH
+export LD_LIBRARY_PATH=${install_dir}/lib:${install_dir}/lib64:\$LD_LIBRARY_PATH
+export MANPATH=${install_dir}/share/man:\$MANPATH
+export INFOPATH=${install_dir}/share/info:\$INFOPATH
+EOF
 
 __banner Complete
 
