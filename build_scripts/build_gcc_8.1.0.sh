@@ -12,7 +12,7 @@
 
 
 # Version of gcc being built (e.g. 8.1.0, or 8.2.0)
-gcc_version=8.1.0
+gcc_version=8.2.0
 
 # Additional makefile options.  E.g., "-j 4" for parallel builds.  Parallel
 # builds are faster, however it can cause a build to fail if the project
@@ -133,6 +133,13 @@ set -e
 
 __banner Creating directories
 
+# ensure workspace directories don't already exist
+for d in  "$build_dir" "$source_dir" ; do
+    if [ -d  "$d" ]; then
+        __die "directory already exists - please remove and try again: $d"
+    fi
+done
+
 for d in "$install_dir" "$build_dir" "$source_dir" "$tarfile_dir" ;
 do
     test  -d "$d" || mkdir --verbose -p $d
@@ -185,16 +192,16 @@ __banner Unpacking source code
 __untar  "$source_dir"  "$tarfile_dir/$gcc_tarfile"
 
 __untar  "$source_dir/gcc-${gcc_version}"  "$tarfile_dir/$mpfr_tarfile"
-mv $source_dir/gcc-${gcc_version}/mpfr-${mpfr_version} $source_dir/gcc-${gcc_version}/mpfr
+mv -v $source_dir/gcc-${gcc_version}/mpfr-${mpfr_version} $source_dir/gcc-${gcc_version}/mpfr
 
 __untar  "$source_dir/gcc-${gcc_version}"  "$tarfile_dir/$mpc_tarfile"
-mv $source_dir/gcc-${gcc_version}/mpc-${mpc_version} $source_dir/gcc-${gcc_version}/mpc
+mv -v $source_dir/gcc-${gcc_version}/mpc-${mpc_version} $source_dir/gcc-${gcc_version}/mpc
 
 __untar "$source_dir/gcc-${gcc_version}"  "$tarfile_dir/$gmp_tarfile"
-mv $source_dir/gcc-${gcc_version}/gmp-${gmp_version} $source_dir/gcc-${gcc_version}/gmp
+mv -v $source_dir/gcc-${gcc_version}/gmp-${gmp_version} $source_dir/gcc-${gcc_version}/gmp
 
 __untar "$source_dir/gcc-${gcc_version}"  "$tarfile_dir/$isl_tarfile"
-mv $source_dir/gcc-${gcc_version}/isl-${isl_version} $source_dir/gcc-${gcc_version}/isl
+mv -v $source_dir/gcc-${gcc_version}/isl-${isl_version} $source_dir/gcc-${gcc_version}/isl
 
 
 #======================================================================
