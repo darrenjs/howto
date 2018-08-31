@@ -17,7 +17,7 @@ llvm_version=6.0.1
 # Additional makefile options.  E.g., "-j 4" for parallel builds.  Parallel
 # builds are faster, however it can cause a build to fail if the project
 # makefile does not support parallel build.
-make_flags="-j 2"
+make_flags="-j 1"
 
 # File locations.  Use 'install_dir' to specify where final binarieswill be
 # installed.  The other directories are used only during the build process, and
@@ -30,8 +30,12 @@ build_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_build
 source_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_sources
 tarfile_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_tarballs
 
+#https://stackoverflo.co/questions/47734094/build-clang-fro-source-using-specific-gcc-toolchain
+gcc_prefix=/opt/gcc-8.2.0
+
 # Note: llvm needs cmake, and version > 3.0
 CMAKE=$(which cmake)
+
 
 #======================================================================
 # Support functions
@@ -111,6 +115,13 @@ set -e
 
 __banner Creating directories
 
+# ensure workspace directories don't already exist
+for d in  "$build_dir" "$source_dir" ; do
+    if [ -d  "$d" ]; then
+        __die "directory already exists - please remove and try again: $d"
+    fi
+done
+
 for d in "$install_dir" "$build_dir" "$source_dir" "$tarfile_dir" ;
 do
     test  -d "$d" || mkdir --verbose -p $d
@@ -154,25 +165,25 @@ __banner Unpacking source code
 # automatically get built during the build of llvm.
 
 __untar  "$source_dir"  "$tarfile_dir/$llvm_tarfile"
-mv $source_dir/llvm-${llvm_version}.src $source_dir/llvm
+mv -v $source_dir/llvm-${llvm_version}.src $source_dir/llvm
 
 __untar  "$source_dir"  "$tarfile_dir/$clang_tarfile"
-mv $source_dir/cfe-${llvm_version}.src $source_dir/llvm/tools/clang
+mv -v $source_dir/cfe-${llvm_version}.src $source_dir/llvm/tools/clang
 
 __untar  "$source_dir"  "$tarfile_dir/$compiler_rt_tarfile"
-mv $source_dir/compiler-rt-${llvm_version}.src $source_dir/llvm/projects/compiler-rt
+mv -v $source_dir/compiler-rt-${llvm_version}.src $source_dir/llvm/projects/compiler-rt
 
 __untar  "$source_dir"  "$tarfile_dir/$libcxx_tarfile"
-mv $source_dir/libcxx-${llvm_version}.src $source_dir/llvm/projects/libcxx
+mv -v $source_dir/libcxx-${llvm_version}.src $source_dir/llvm/projects/libcxx
 
 __untar  "$source_dir"  "$tarfile_dir/$libcxxabi_tarfile"
-mv $source_dir/libcxxabi-${llvm_version}.src $source_dir/llvm/projects/libcxxabi
+mv -v $source_dir/libcxxabi-${llvm_version}.src $source_dir/llvm/projects/libcxxabi
 
 __untar  "$source_dir"  "$tarfile_dir/$libunwind_tarfile"
-mv $source_dir/libunwind-${llvm_version}.src $source_dir/llvm/projects/libunwind
+mv -v $source_dir/libunwind-${llvm_version}.src $source_dir/llvm/projects/libunwind
 
 __untar  "$source_dir"  "$tarfile_dir/$extra_tarfile"
-mv $source_dir/clang-tools-extra-${llvm_version}.src $source_dir/llvm/tools/clang/tools/extra
+mv -v $source_dir/clang-tools-extra-${llvm_version}.src $source_dir/llvm/tools/clang/tools/extra
 
 
 #======================================================================
@@ -201,6 +212,12 @@ export USER=$U
 export HOME=$H
 export PATH=/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin
 
+# if we are building using an earlier GCC (built with a similar script), bring
+# that into environment also
+if [ -n "${gcc_prefix}" -a -f "${gcc_prefix}/env.sh" ] ; then
+  source "${gcc_prefix}/env.sh"
+fi
+
 echo shell environment follows:
 env
 
@@ -224,6 +241,10 @@ __banner Configuring source code
 cd ${build_dir}
 "$CMAKE" \
     -G "Unix Makefiles" \
+    -DCMAKE_C_COMPILER=${gcc_prefix}/bin/gcc \
+    -DCMAKE_CXX_COMPILER=${gcc_prefix}/bin/g++ \
+    -DGCC_INSTALL_PREFIX=${gcc_prefix} \
+    -DCMAKE_CXX_LINK_FLAGS="-L${gcc_prefix}/lib64 -Wl,-rpath,${gcc_prefix}/lib64" \
     -DLLVM_TARGETS_TO_BUILD=X86 \
     -DLLVM_BUILD_32_BITS:BOOL=OFF \
     -DCMAKE_INSTALL_PREFIX="$install_dir" \
@@ -260,6 +281,24 @@ make install
 # Post build
 #======================================================================
 
+# TODO: what if gcc_prefix undefined?
+
+# Create a shell script that users can source to bring llvm into shell
+# environment
+cat << EOF > ${install_dir}/env.sh
+# source this script to bring llvm ${llvm_version} into your environment
+#
+# this also attempts to activate the gcc compiler used
+if [ -f "${gcc_prefix}/env.sh" ] ; then
+  source "${gcc_prefix}/env.sh"
+fi
+
+export PATH=${install_dir}/bin:\$PATH
+export LD_LIBRARY_PATH=${install_dir}/lib:${install_dir}/lib64:\$LD_LIBRARY_PATH
+export MANPATH=${install_dir}/share/man:\$MANPATH
+export INFOPATH=${install_dir}/share/info:\$INFOPATH
+
+EOF
 
 __banner Complete
 
