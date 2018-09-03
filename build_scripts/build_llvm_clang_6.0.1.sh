@@ -2,8 +2,21 @@
 
 # Instructions for building llvm & clang 6.0.1 from source.
 
+# This script will configure llvm to build upon an existing gcc compiler. So as
+# part of the user configuation section below, the location of a custom gcc may
+# be provided; otherwise the system gcc will be used
+
+
+# https://stackoverflo.co/questions/47734094/build-clang-fro-source-using-specific-gcc-toolchain
+
+
+#----------------------------------------------------------------------
+# LICENSE
+#
 # This script is free software; you can redistribute it and/or modify it under
 # the terms of the MIT license.
+#
+#----------------------------------------------------------------------
 
 
 #======================================================================
@@ -14,10 +27,8 @@
 # Version of llvm being built
 llvm_version=6.0.1
 
-# Additional makefile options.  E.g., "-j 4" for parallel builds.  Parallel
-# builds are faster, however it can cause a build to fail if the project
-# makefile does not support parallel build.
-make_flags="-j 1"
+# Additional makefile options.  E.g., "-j 4" for parallel builds.
+make_flags="-j 2"
 
 # File locations.  Use 'install_dir' to specify where final binarieswill be
 # installed.  The other directories are used only during the build process, and
@@ -30,8 +41,23 @@ build_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_build
 source_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_sources
 tarfile_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_tarballs
 
-#https://stackoverflo.co/questions/47734094/build-clang-fro-source-using-specific-gcc-toolchain
-gcc_prefix=/opt/gcc-8.2.0
+# Set the path to your gcc directory.  If you have installed gcc in custom
+# location, provide that location in the '' variable.
+
+gcc_custom_prefix_dir=${HOME}/opt/gcc-8.2.0
+
+if [ -n "$gcc_custom_prefix_dir" ] ; then
+    gcc_prefix_dir="$gcc_custom_prefix_dir"
+    gcc_bin_dir=${gcc_prefix_dir}/bin
+    gcc_lib_dir=${gcc_prefix_dir}/lib
+else
+    # If not using a custom gcc, use the system gcc, which is found at these
+    # (usual) location. Modify these if your system gcc is at a different
+    # location.  which is normally located as below
+    gcc_prefix_dir=/
+    gcc_bin_dir=/bin
+    gcc_lib_dir=/lib64
+fi
 
 # Note: llvm needs cmake, and version > 3.0
 CMAKE=$(which cmake)
@@ -106,6 +132,18 @@ function __wget()
 # Set script to abort on any command that results an error status
 trap '__abort' 0
 set -e
+
+#======================================================================
+# Check gcc directories
+#======================================================================
+
+
+if [ -n "$gcc_custom_prefix_dir" ] ; then
+    test -d "$gcc_custom_prefix_dir" || __die "gcc_custom_prefix_dir directory not found: $gcc_custom_prefix_dir"
+fi
+test -d "$gcc_prefix_dir" || __die "gcc_prefix_dir directory not found: $gcc_prefix_dir"
+test -d "$gcc_bin_dir"    || __die "gcc_bin_dir directory not found: $gcc_bin_dir"
+test -d "$gcc_lib_dir"    || __die "gcc_lib_dir directory not found: $gcc_lib_dir"
 
 
 #======================================================================
@@ -210,13 +248,7 @@ done
 # restore
 export USER=$U
 export HOME=$H
-export PATH=/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin
-
-# if we are building using an earlier GCC (built with a similar script), bring
-# that into environment also
-if [ -n "${gcc_prefix}" -a -f "${gcc_prefix}/env.sh" ] ; then
-  source "${gcc_prefix}/env.sh"
-fi
+export PATH="$gcc_bin_dir":/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin
 
 echo shell environment follows:
 env
@@ -241,10 +273,10 @@ __banner Configuring source code
 cd ${build_dir}
 "$CMAKE" \
     -G "Unix Makefiles" \
-    -DCMAKE_C_COMPILER=${gcc_prefix}/bin/gcc \
-    -DCMAKE_CXX_COMPILER=${gcc_prefix}/bin/g++ \
-    -DGCC_INSTALL_PREFIX=${gcc_prefix} \
-    -DCMAKE_CXX_LINK_FLAGS="-L${gcc_prefix}/lib64 -Wl,-rpath,${gcc_prefix}/lib64" \
+    -DCMAKE_C_COMPILER="$gcc_bin_dir/gcc" \
+    -DCMAKE_CXX_COMPILER="$gcc_bin_dir/g++" \
+    -DGCC_INSTALL_PREFIX="$gcc_prefix_dir" \
+    -DCMAKE_CXX_LINK_FLAGS="-L$gcc_lib_dir" -Wl,-rpath,"$gcc_lib_dir" \
     -DLLVM_TARGETS_TO_BUILD=X86 \
     -DLLVM_BUILD_32_BITS:BOOL=OFF \
     -DCMAKE_INSTALL_PREFIX="$install_dir" \
@@ -281,16 +313,15 @@ make install
 # Post build
 #======================================================================
 
-# TODO: what if gcc_prefix undefined?
 
 # Create a shell script that users can source to bring llvm into shell
 # environment
 cat << EOF > ${install_dir}/env.sh
-# source this script to bring llvm ${llvm_version} into your environment
-#
-# this also attempts to activate the gcc compiler used
-if [ -f "${gcc_prefix}/env.sh" ] ; then
-  source "${gcc_prefix}/env.sh"
+# Source this script to bring llvm ${llvm_version} into your environment.
+# This also attempts to activate the gcc compiler used
+
+if [ -f "${gcc_custom_prefix_dir}/env.sh" ] ; then
+  source "${gcc_custom_prefix_dir}/env.sh"
 fi
 
 export PATH=${install_dir}/bin:\$PATH
