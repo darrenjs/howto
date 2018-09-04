@@ -2,11 +2,13 @@
 
 # Instructions for building llvm & clang 6.0.1 from source.
 
-# This script will configure llvm to build upon an existing gcc compiler. So as
-# part of the user configuation section below, the location of a custom gcc may
-# be provided; otherwise the system gcc will be used
+# This script will download, configure and build llvm, using an existing gcc
+# compiler.  The gcc used can be either the system default, or a user's custom
+# gcc. For use of a custom gcc, its location must be provided via the
+# 'gcc_custom_prefix_dir' configuration variable below
 
-
+# Other experiences of building llvm from source:
+#
 # https://stackoverflo.co/questions/47734094/build-clang-fro-source-using-specific-gcc-toolchain
 
 
@@ -41,15 +43,16 @@ build_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_build
 source_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_sources
 tarfile_dir=/var/tmp/$(whoami)/llvm-${llvm_version}_tarballs
 
-# Set the path to your gcc directory.  If you have installed gcc in custom
-# location, provide that location in the '' variable.
+# Set the path to your gcc directory.  To use a custom gcc installation, provide
+# its location in 'gcc_custom_prefix_dir' variable.
 
 gcc_custom_prefix_dir=${HOME}/opt/gcc-8.2.0
 
 if [ -n "$gcc_custom_prefix_dir" ] ; then
+    echo using custom gcc at $gcc_custom_prefix_dir
     gcc_prefix_dir="$gcc_custom_prefix_dir"
     gcc_bin_dir=${gcc_prefix_dir}/bin
-    gcc_lib_dir=${gcc_prefix_dir}/lib
+    gcc_lib_dir=${gcc_prefix_dir}/lib64
 else
     # If not using a custom gcc, use the system gcc, which is found at these
     # (usual) location. Modify these if your system gcc is at a different
@@ -186,7 +189,6 @@ for f in ${llvm_tarfile} ${clang_tarfile} ${compiler_rt_tarfile} \
          ${libcxx_tarfile} ${libcxxabi_tarfile} ${extra_tarfile} \
          ${libunwind_tarfile} ;
 do
-    echo $f
     __wget http://releases.llvm.org/${llvm_version}  $f
 done
 
@@ -237,18 +239,19 @@ mv -v $source_dir/clang-tools-extra-${llvm_version}.src $source_dir/llvm/tools/c
 __banner Cleaning environment
 
 # store USER, HOME and then completely clear environment
-U=$USER
-H=$HOME
+U="$USER"
+H="$HOME"
 
 for i in $(env | awk -F"=" '{print $1}') ;
 do
-    unset $i || true   # ignore unset fails
+    unset $i || true   # ignore unset failures
 done
 
-# restore
-export USER=$U
-export HOME=$H
+# restore, and set PATH and LD_LIBRARY_PATH to bring gcc into environment
+export USER="$U"
+export HOME="$H"
 export PATH="$gcc_bin_dir":/usr/local/bin:/usr/bin:/bin:/sbin:/usr/sbin
+export LD_LIBRARY_PATH="$gcc_lib_dir"
 
 echo shell environment follows:
 env
