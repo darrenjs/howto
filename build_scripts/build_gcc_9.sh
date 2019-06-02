@@ -1,4 +1,4 @@
-#/usr/bin/env bash
+#!/bin/sh
 
 # Instructions for building gcc 8.x from source.
 
@@ -16,7 +16,7 @@ gcc_version=9.1.0
 # Additional makefile options.  E.g., "-j 4" for parallel builds.  Parallel
 # builds are faster, however it can cause a build to fail if the project
 # makefile does not support parallel build.
-#make_flags=""
+#make_flags="-j 2"
 
 # Architecture we are building for.
 arch_flags="-march=x86-64"
@@ -71,7 +71,7 @@ __die()
 }
 
 
-function __banner()
+__banner()
 {
     echo "============================================================"
     echo $*
@@ -112,7 +112,7 @@ EOF
 }
 
 
-function __wget()
+__wget()
 {
     urlroot=$1; shift
     tarfile=$1; shift
