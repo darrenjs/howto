@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Instructions for building gcc 8.x from source.
+# Instructions for building gcc 9.x from source.
 
 # This gcc build script is free software; you can redistribute it and/or modify
 # it under the terms of the MIT license.
