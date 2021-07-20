@@ -171,8 +171,8 @@ gcc_tarfile=gcc-${gcc_version}.tar.gz
 __wget https://gmplib.org/download/gmp              $gmp_tarfile
 __wget https://ftp.gnu.org/gnu/mpfr                 $mpfr_tarfile
 __wget http://www.multiprecision.org/downloads      $mpc_tarfile
-__wget ftp://gcc.gnu.org/pub/gcc/infrastructure     $isl_tarfile
-__wget ftp://ftp.gnu.org/gnu/gcc/gcc-${gcc_version} $gcc_tarfile
+__wget https://gcc.gnu.org/pub/gcc/infrastructure     $isl_tarfile
+__wget https://ftp.gnu.org/gnu/gcc/gcc-${gcc_version} $gcc_tarfile
 
 # Check tarfiles are found, if not found, dont proceed
 for f in $gmp_tarfile $mpfr_tarfile $mpc_tarfile $isl_tarfile $gcc_tarfile
