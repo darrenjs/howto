@@ -34,6 +34,9 @@ install_dir=${HOME}/opt/gcc-${gcc_version}
 build_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_build
 source_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_source
 tarfile_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_tarballs
+rm -rf ${build_dir}
+rm -rf ${source_dir}
+rm -rf ${tarfile_dir}
 
 # String which gets embedded into gcc version info, can be accessed at
 # runtime. Use to indicate who/what/when has built this compiler.
@@ -224,9 +227,13 @@ __banner Cleaning environment
 U=$USER
 H=$HOME
 
+RGX_ENV_VAR='^[0-9A-Za-z_].*'
+
 for i in $(env | awk -F"=" '{print $1}') ;
 do
-    unset $i || true   # ignore unset fails
+if [[ $i =~ ${rgx_env_var} ]]; then
+	unset $i || true   # ignore unset fails
+fi
 done
 
 # restore
