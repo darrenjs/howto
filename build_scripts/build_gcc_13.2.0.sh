@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-# strict bash
+# safer bash
 set -o errexit
 set -o pipefail
 set -o nounset
