@@ -43,20 +43,6 @@ tarfile_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_taballs
 # runtime. Use to indicate who/what/when has built this compiler.
 packageversion="$(whoami)-$(hostname -s)"
 
-# GCC requires that various tools and packages be available for use in the build
-# procedure, including several support libraries are necessary to build GCC. The
-# versions below are close to (or just higher than) the minimum recommended
-# versions.  These libraries will all be built "in-source" with GCC, i.e., they
-# will get unzipped into the GCC source code and get build along with GCC.
-
-# Versions used below are the latest available on
-# https://gcc.gnu.org/pub/gcc/infrastructure, as of Jan 2024.
-gmp_version=6.2.1
-mpfr_version=4.1.0
-mpc_version=1.2.1
-isl_version=0.24
-
-
 #======================================================================
 # Support functions
 #======================================================================
@@ -158,20 +144,12 @@ done
 
 __banner Downloading source code
 
-gmp_tarfile=gmp-${gmp_version}.tar.bz2
-mpfr_tarfile=mpfr-${mpfr_version}.tar.bz2
-mpc_tarfile=mpc-${mpc_version}.tar.gz
-isl_tarfile=isl-${isl_version}.tar.bz2
 gcc_tarfile=gcc-${gcc_version}.tar.gz
 
-__wget https://gmplib.org/download/gmp              $gmp_tarfile
-__wget https://ftp.gnu.org/gnu/mpfr                 $mpfr_tarfile
-__wget http://www.multiprecision.org/downloads      $mpc_tarfile
-__wget https://gcc.gnu.org/pub/gcc/infrastructure     $isl_tarfile
 __wget https://ftp.gnu.org/gnu/gcc/gcc-${gcc_version} $gcc_tarfile
 
 # Check tarfiles are found, if not found, dont proceed
-for f in $gmp_tarfile $mpfr_tarfile $mpc_tarfile $isl_tarfile $gcc_tarfile
+for f in $gcc_tarfile
 do
     if [ ! -f "$tarfile_dir/$f" ]; then
         __die tarfile not found: $tarfile_dir/$f
@@ -188,21 +166,11 @@ __banner Unpacking source code
 
 # We are using GCC's feature of in-source builds.  If each dependency is placed
 # within the GCC source directory, they will automatically get built during the
-# build of GCC.
+# build of GCC.  GCC's own script is used to download dependencies.
 
 __untar  "$source_dir"  "$tarfile_dir/$gcc_tarfile"
 
-__untar  "$source_dir/gcc-${gcc_version}"  "$tarfile_dir/$mpfr_tarfile"
-mv -v $source_dir/gcc-${gcc_version}/mpfr-${mpfr_version} $source_dir/gcc-${gcc_version}/mpfr
-
-__untar  "$source_dir/gcc-${gcc_version}"  "$tarfile_dir/$mpc_tarfile"
-mv -v $source_dir/gcc-${gcc_version}/mpc-${mpc_version} $source_dir/gcc-${gcc_version}/mpc
-
-__untar "$source_dir/gcc-${gcc_version}"  "$tarfile_dir/$gmp_tarfile"
-mv -v $source_dir/gcc-${gcc_version}/gmp-${gmp_version} $source_dir/gcc-${gcc_version}/gmp
-
-__untar "$source_dir/gcc-${gcc_version}"  "$tarfile_dir/$isl_tarfile"
-mv -v $source_dir/gcc-${gcc_version}/isl-${isl_version} $source_dir/gcc-${gcc_version}/isl
+cd "$source_dir"/gcc-${gcc_version} && ./contrib/download_prerequisites
 
 
 #======================================================================
@@ -285,7 +253,7 @@ CC="$CC" CXX="$CXX" CFLAGS="$OPT_FLAGS" \
 
 cd "$build_dir"
 
-make BOOT_CFLAGS="$OPT_FLAGS" $make_flags bootstrap
+nice make BOOT_CFLAGS="$OPT_FLAGS" $make_flags bootstrap
 
 # If desired, run the GCC test phase by uncommenting following line
 
@@ -299,7 +267,7 @@ make BOOT_CFLAGS="$OPT_FLAGS" $make_flags bootstrap
 
 __banner Installing
 
-make install
+nice make install
 
 
 #======================================================================
