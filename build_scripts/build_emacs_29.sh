@@ -210,6 +210,26 @@ cd "${build_dir}"
 # sudo apt-get install -y libgccjit-11-dev  # for with-native-compilation
 # sudo apt-get install libtree-sitter-dev   # for with-tree-sitter
 
+# On Centos/Rocky/Redhat platforms, the following commands can be used to
+# install various dependencies. Note that some of these packages come from EPEL,
+# so that package source needs to be enabled first.
+#
+# (enable EPEL)
+# dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+#
+# yum install wget
+# yum groupinstall "Development Tools"
+# yum install libgccjit-devel
+# yum install gnutls-devel
+# yum install ncurses-devel
+# yum install jansson-devel
+# yum install gtk3-devel
+# yum install libXpm-devel
+# yum install libjpeg-devel
+# yum install libpng-devel
+# yum install sqlite-devel
+# yum install libxml2-devel
+
 $source_dir/emacs-${emacs_version}/configure \
                   --prefix=$install_dir  \
                   --with-json=ifavailable \
@@ -219,8 +239,8 @@ $source_dir/emacs-${emacs_version}/configure \
                   --with-gif=ifavailable \
                   --with-tiff=ifavailable  \
                   --with-x-toolkit=gtk3 \
-                  --with-tree-sitte=ifavailabler \
-                  --with-native-compilation
+                  --with-tree-sitter=ifavailable \
+                  --with-native-compilation  # requires libgccjit-devel
 
 #======================================================================
 # Compiling
