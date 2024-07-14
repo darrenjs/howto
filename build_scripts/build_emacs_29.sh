@@ -31,7 +31,7 @@ make_flags="-j 2"
 install_dir=${HOME}/opt/emacs-${emacs_version}
 build_dir=/var/tmp/$(whoami)/emacs-${emacs_version}_build
 source_dir=/var/tmp/$(whoami)/emacs-${emacs_version}_source
-tarfile_dir=/var/tmp/$(whoami)/emacs-${emacs_version}_taballs
+tarfile_dir=/var/tmp/$(whoami)/emacs-${emacs_version}_tarballs
 
 #======================================================================
 # Support functions
