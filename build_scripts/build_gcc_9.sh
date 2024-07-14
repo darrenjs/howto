@@ -251,7 +251,7 @@ CC=gcc
 CXX=g++
 OPT_FLAGS="-O2 $gflags -Wall  $arch_flags"
 CC="$CC" CXX="$CXX" CFLAGS="$OPT_FLAGS" \
-    CXXFLAGS="`echo " $OPT_FLAGS " | sed 's/ -Wall / /g'`" \
+    CXXFLAGS="$(echo " $OPT_FLAGS " | sed 's/ -Wall / /g')" \
     $source_dir/gcc-${gcc_version}/configure --prefix=${install_dir} \
     --enable-bootstrap \
     --enable-shared \
