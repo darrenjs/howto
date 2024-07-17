@@ -34,7 +34,7 @@ build_target=x86_64-unknown-linux-gnu
 install_dir=${HOME}/opt/gcc-${gcc_version}
 build_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_build
 source_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_source
-tarfile_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_taballs
+tarfile_dir=/var/tmp/$(whoami)/gcc-${gcc_version}_tarballs
 
 # String which gets embedded into GCC verion info, can be accessed at
 # runtime. Use to indicate who/what/when has built this compiler.
