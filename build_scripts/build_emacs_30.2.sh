@@ -241,11 +241,20 @@ $source_dir/emacs-${emacs_version}/configure \
                   --with-gif=ifavailable \
                   --with-tiff=ifavailable  \
                   --with-x-toolkit=gtk3 \
-                  --with-tree-sitter=ifavailable \
                   --with-modules \
                   --with-gnutls \
                   --with-xml2 \
+                  --with-tree-sitter  \
                   --with-native-compilation  # requires libgccjit-devel
+
+# Note: on Ubuntu you need to install libgccjit-devel and tree-site dev.
+#
+# For libgccjit-dev, use follow command (the version number should match your
+# version of gcc, `gcc --version`):
+#
+#   sudo apt install libgccjit-15-dev
+#   sudo apt install libtree-sitter-dev
+
 
 #======================================================================
 # Compiling
